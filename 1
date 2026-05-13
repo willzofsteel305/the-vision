@@ -1,0 +1,876 @@
+// =======================
+// package.json
+// =======================
+{
+  "name": "social-giant",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.0",
+    "connect-mongo": "^5.0.0",
+    "dotenv": "^16.4.0",
+    "ejs": "^3.1.9",
+    "express": "^4.19.0",
+    "express-session": "^1.17.3",
+    "method-override": "^3.0.0",
+    "mongoose": "^8.2.0",
+    "multer": "^1.4.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}
+
+// =======================
+// .env  (create in root)
+// =======================
+// adjust to your MongoDB
+MONGO_URI=mongodb://127.0.0.1:27017/social_giant
+SESSION_SECRET=supersecretkey
+
+// =======================
+// server.js
+// =======================
+const express = require('express');
+const mongoose = require('mongoose');
+const session = require('express-session');
+const MongoStore = require('connect-mongo');
+const methodOverride = require('method-override');
+const path = require('path');
+const dotenv = require('dotenv');
+
+dotenv.config();
+
+const User = require('./src/models/User');
+const Post = require('./src/models/Post');
+const Comment = require('./src/models/Comment');
+const Message = require('./src/models/Message');
+const Story = require('./src/models/Story');
+const Notification = require('./src/models/Notification');
+const upload = require('./src/middleware/upload');
+const bcrypt = require('bcrypt');
+
+const app = express();
+
+// ---------- DB ----------
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.error(err));
+
+// ---------- Middleware ----------
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'src', 'views'));
+
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(methodOverride('_method'));
+
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || 'keyboardcat',
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({ mongoUrl: process.env.MONGO_URI }),
+    cookie: { maxAge: 1000 * 60 * 60 * 24 * 7 }
+  })
+);
+
+// ---------- Auth helpers ----------
+function requireAuth(req, res, next) {
+  if (!req.session.userId) return res.redirect('/login');
+  next();
+}
+
+app.use(async (req, res, next) => {
+  res.locals.currentUser = null;
+  if (req.session.userId) {
+    try {
+      const user = await User.findById(req.session.userId);
+      res.locals.currentUser = user;
+    } catch (e) {}
+  }
+  next();
+});
+
+// ---------- Routes ----------
+
+// Home feed (posts from self + following)
+app.get('/', requireAuth, async (req, res) => {
+  const me = await User.findById(req.session.userId);
+  const ids = [me._id, ...me.following];
+  const posts = await Post.find({ author: { $in: ids } })
+    .populate('author', 'username avatar')
+    .sort({ createdAt: -1 });
+
+  const stories = await Story.find({
+    author: { $in: ids },
+    expiresAt: { $gt: new Date() }
+  })
+    .populate('author', 'username avatar')
+    .sort({ createdAt: -1 });
+
+  const notifications = await Notification.find({ user: me._id, read: false })
+    .sort({ createdAt: -1 })
+    .limit(10);
+
+  res.render('index', { posts, stories, notifications });
+});
+
+// Explore (all posts)
+app.get('/explore', requireAuth, async (req, res) => {
+  const posts = await Post.find()
+    .populate('author', 'username avatar')
+    .sort({ createdAt: -1 });
+  res.render('explore', { posts });
+});
+
+// Register
+app.get('/register', (req, res) => {
+  if (req.session.userId) return res.redirect('/');
+  res.render('register', { error: null });
+});
+
+app.post('/register', async (req, res) => {
+  const { username, email, password, confirmPassword } = req.body;
+  if (!username || !email || !password || !confirmPassword) {
+    return res.render('register', { error: 'All fields required' });
+  }
+  if (password !== confirmPassword) {
+    return res.render('register', { error: 'Passwords do not match' });
+  }
+  const existing = await User.findOne({ $or: [{ email }, { username }] });
+  if (existing) {
+    return res.render('register', { error: 'User already exists' });
+  }
+  const hashed = await bcrypt.hash(password, 10);
+  const user = await User.create({ username, email, password: hashed });
+  req.session.userId = user._id;
+  res.redirect('/');
+});
+
+// Login
+app.get('/login', (req, res) => {
+  if (req.session.userId) return res.redirect('/');
+  res.render('login', { error: null });
+});
+
+app.post('/login', async (req, res) => {
+  const { emailOrUsername, password } = req.body;
+  if (!emailOrUsername || !password) {
+    return res.render('login', { error: 'All fields required' });
+  }
+  const user = await User.findOne({
+    $or: [{ email: emailOrUsername }, { username: emailOrUsername }]
+  });
+  if (!user) return res.render('login', { error: 'Invalid credentials' });
+  const match = await bcrypt.compare(password, user.password);
+  if (!match) return res.render('login', { error: 'Invalid credentials' });
+  req.session.userId = user._id;
+  res.redirect('/');
+});
+
+// Logout
+app.post('/logout', (req, res) => {
+  req.session.destroy(() => res.redirect('/login'));
+});
+
+// Profile
+app.get('/profile/:username', requireAuth, async (req, res) => {
+  const profileUser = await User.findOne({ username: req.params.username });
+  if (!profileUser) return res.status(404).send('User not found');
+
+  const posts = await Post.find({ author: profileUser._id }).sort({ createdAt: -1 });
+  const isMe = profileUser._id.toString() === req.session.userId.toString();
+  const me = await User.findById(req.session.userId);
+  const isFollowing = me.following.map(id => id.toString()).includes(profileUser._id.toString());
+
+  res.render('profile', { profileUser, posts, isMe, isFollowing });
+});
+
+// Follow / unfollow
+app.post('/profile/:username/follow', requireAuth, async (req, res) => {
+  const target = await User.findOne({ username: req.params.username });
+  if (!target) return res.redirect('back');
+  const me = await User.findById(req.session.userId);
+
+  const already = me.following.map(id => id.toString()).includes(target._id.toString());
+  if (already) {
+    me.following = me.following.filter(id => id.toString() !== target._id.toString());
+    target.followers = target.followers.filter(id => id.toString() !== me._id.toString());
+  } else {
+    me.following.push(target._id);
+    target.followers.push(me._id);
+    await Notification.create({
+      user: target._id,
+      type: 'follow',
+      fromUser: me._id,
+      message: `${me.username} started following you`
+    });
+  }
+  await me.save();
+  await target.save();
+  res.redirect('back');
+});
+
+// Edit profile (bio + avatar URL only, to keep simple)
+app.get('/settings/profile', requireAuth, async (req, res) => {
+  const me = await User.findById(req.session.userId);
+  res.render('settings_profile', { me, error: null });
+});
+
+app.post('/settings/profile', requireAuth, async (req, res) => {
+  const { bio, avatar } = req.body;
+  const me = await User.findById(req.session.userId);
+  me.bio = bio || '';
+  if (avatar && avatar.trim()) me.avatar = avatar.trim();
+  await me.save();
+  res.redirect(`/profile/${me.username}`);
+});
+
+// Create post (with optional image)
+app.post('/posts', requireAuth, upload.single('image'), async (req, res) => {
+  const { content } = req.body;
+  if (!content && !req.file) return res.redirect('back');
+  const post = await Post.create({
+    author: req.session.userId,
+    content: content || '',
+    image: req.file ? '/uploads/' + req.file.filename : null
+  });
+
+  // Notify followers
+  const me = await User.findById(req.session.userId);
+  const followers = me.followers || [];
+  await Promise.all(
+    followers.map(fid =>
+      Notification.create({
+        user: fid,
+        type: 'post',
+        fromUser: me._id,
+        post: post._id,
+        message: `${me.username} posted something`
+      })
+    )
+  );
+
+  res.redirect('/');
+});
+
+// Like / unlike post
+app.post('/posts/:id/like', requireAuth, async (req, res) => {
+  const post = await Post.findById(req.params.id).populate('author');
+  if (!post) return res.redirect('back');
+  const userId = req.session.userId.toString();
+  const hasLiked = post.likes.map(id => id.toString()).includes(userId);
+  if (hasLiked) {
+    post.likes = post.likes.filter(id => id.toString() !== userId);
+  } else {
+    post.likes.push(userId);
+    if (post.author._id.toString() !== userId) {
+      await Notification.create({
+        user: post.author._id,
+        type: 'like',
+        fromUser: userId,
+        post: post._id,
+        message: `${(await User.findById(userId)).username} liked your post`
+      });
+    }
+  }
+  await post.save();
+  res.redirect('back');
+});
+
+// Comments
+app.post('/posts/:id/comments', requireAuth, async (req, res) => {
+  const { content } = req.body;
+  if (!content || !content.trim()) return res.redirect('back');
+  const post = await Post.findById(req.params.id).populate('author');
+  if (!post) return res.redirect('back');
+
+  const comment = await Comment.create({
+    post: post._id,
+    author: req.session.userId,
+    content: content.trim()
+  });
+
+  if (post.author._id.toString() !== req.session.userId.toString()) {
+    await Notification.create({
+      user: post.author._id,
+      type: 'comment',
+      fromUser: req.session.userId,
+      post: post._id,
+      message: `${(await User.findById(req.session.userId)).username} commented on your post`
+    });
+  }
+
+  res.redirect('back');
+});
+
+// Stories (24h)
+app.post('/stories', requireAuth, upload.single('image'), async (req, res) => {
+  const { caption } = req.body;
+  if (!req.file) return res.redirect('back');
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  await Story.create({
+    author: req.session.userId,
+    image: '/uploads/' + req.file.filename,
+    caption: caption || '',
+    expiresAt
+  });
+  res.redirect('/');
+});
+
+// Messages (simple 1:1)
+app.get('/messages', requireAuth, async (req, res) => {
+  const me = await User.findById(req.session.userId);
+  const users = await User.find({ _id: { $ne: me._id } }).select('username avatar');
+  res.render('messages', { users, activeUser: null, thread: [] });
+});
+
+app.get('/messages/:username', requireAuth, async (req, res) => {
+  const me = await User.findById(req.session.userId);
+  const other = await User.findOne({ username: req.params.username });
+  if (!other) return res.redirect('/messages');
+
+  const users = await User.find({ _id: { $ne: me._id } }).select('username avatar');
+
+  const thread = await Message.find({
+    $or: [
+      { from: me._id, to: other._id },
+      { from: other._id, to: me._id }
+    ]
+  })
+    .populate('from', 'username avatar')
+    .populate('to', 'username avatar')
+    .sort({ createdAt: 1 });
+
+  res.render('messages', { users, activeUser: other, thread });
+});
+
+app.post('/messages/:username', requireAuth, async (req, res) => {
+  const me = await User.findById(req.session.userId);
+  const other = await User.findOne({ username: req.params.username });
+  if (!other) return res.redirect('/messages');
+  const { content } = req.body;
+  if (!content || !content.trim()) return res.redirect('back');
+
+  await Message.create({
+    from: me._id,
+    to: other._id,
+    content: content.trim()
+  });
+
+  await Notification.create({
+    user: other._id,
+    type: 'message',
+    fromUser: me._id,
+    message: `New message from ${me.username}`
+  });
+
+  res.redirect('back');
+});
+
+// Notifications page
+app.get('/notifications', requireAuth, async (req, res) => {
+  const list = await Notification.find({ user: req.session.userId })
+    .populate('fromUser', 'username avatar')
+    .populate('post', '_id')
+    .sort({ createdAt: -1 })
+    .limit(50);
+  await Notification.updateMany({ user: req.session.userId, read: false }, { read: true });
+  res.render('notifications', { list });
+});
+
+// 404
+app.use((req, res) => res.status(404).send('Not found'));
+
+// Start
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`http://localhost:${PORT}`));
+
+// =======================
+// src/models/User.js
+// =======================
+const mongoose = require('mongoose');
+
+const userSchema = new mongoose.Schema(
+  {
+    username: { type: String, required: true, unique: true, trim: true },
+    email: { type: String, required: true, unique: true, lowercase: true },
+    password: { type: String, required: true },
+    bio: { type: String, default: '' },
+    avatar: { type: String, default: '/default-avatar.png' },
+    followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose.model('User', userSchema);
+
+// =======================
+// src/models/Post.js
+// =======================
+const mongoose2 = require('mongoose');
+
+const postSchema = new mongoose2.Schema(
+  {
+    author: { type: mongoose2.Schema.Types.ObjectId, ref: 'User', required: true },
+    content: { type: String, default: '' },
+    image: { type: String, default: null },
+    likes: [{ type: mongoose2.Schema.Types.ObjectId, ref: 'User' }]
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose2.model('Post', postSchema);
+
+// =======================
+// src/models/Comment.js
+// =======================
+const mongoose3 = require('mongoose');
+
+const commentSchema = new mongoose3.Schema(
+  {
+    post: { type: mongoose3.Schema.Types.ObjectId, ref: 'Post', required: true },
+    author: { type: mongoose3.Schema.Types.ObjectId, ref: 'User', required: true },
+    content: { type: String, required: true }
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose3.model('Comment', commentSchema);
+
+// =======================
+// src/models/Message.js
+// =======================
+const mongoose4 = require('mongoose');
+
+const messageSchema = new mongoose4.Schema(
+  {
+    from: { type: mongoose4.Schema.Types.ObjectId, ref: 'User', required: true },
+    to: { type: mongoose4.Schema.Types.ObjectId, ref: 'User', required: true },
+    content: { type: String, required: true }
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose4.model('Message', messageSchema);
+
+// =======================
+// src/models/Story.js
+// =======================
+const mongoose5 = require('mongoose');
+
+const storySchema = new mongoose5.Schema(
+  {
+    author: { type: mongoose5.Schema.Types.ObjectId, ref: 'User', required: true },
+    image: { type: String, required: true },
+    caption: { type: String, default: '' },
+    expiresAt: { type: Date, required: true }
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose5.model('Story', storySchema);
+
+// =======================
+// src/models/Notification.js
+// =======================
+const mongoose6 = require('mongoose');
+
+const notificationSchema = new mongoose6.Schema(
+  {
+    user: { type: mongoose6.Schema.Types.ObjectId, ref: 'User', required: true },
+    type: { type: String, enum: ['follow', 'like', 'comment', 'post', 'message'], required: true },
+    fromUser: { type: mongoose6.Schema.Types.ObjectId, ref: 'User' },
+    post: { type: mongoose6.Schema.Types.ObjectId, ref: 'Post' },
+    message: { type: String, required: true },
+    read: { type: Boolean, default: false }
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose6.model('Notification', notificationSchema);
+
+// =======================
+// src/middleware/upload.js
+// =======================
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+const uploadDir = path.join(__dirname, '..', '..', 'public', 'uploads');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadDir),
+  filename: (req, file, cb) =>
+    cb(null, Date.now() + '-' + Math.round(Math.random() * 1e9) + path.extname(file.originalname))
+});
+
+module.exports = multer({ storage });
+
+// =======================
+// src/views/layout.ejs
+// =======================
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Social Giant</title>
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container">
+      <a class="navbar-brand" href="/">SocialGiant</a>
+      <div class="collapse navbar-collapse">
+        <% if (currentUser) { %>
+          <ul class="navbar-nav me-auto">
+            <li class="nav-item"><a class="nav-link" href="/explore">Explore</a></li>
+            <li class="nav-item"><a class="nav-link" href="/messages">Messages</a></li>
+            <li class="nav-item"><a class="nav-link" href="/notifications">Notifications</a></li>
+          </ul>
+        <% } %>
+      </div>
+      <div class="d-flex">
+        <% if (currentUser) { %>
+          <a href="/profile/<%= currentUser.username %>" class="btn btn-outline-light btn-sm me-2">
+            @<%= currentUser.username %>
+          </a>
+          <form action="/logout?_method=POST" method="POST">
+            <button class="btn btn-outline-light btn-sm">Logout</button>
+          </form>
+        <% } else { %>
+          <a href="/login" class="btn btn-outline-light btn-sm me-2">Login</a>
+          <a href="/register" class="btn btn-primary btn-sm">Register</a>
+        <% } %>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <%- body %>
+  </main>
+</body>
+</html>
+
+// =======================
+// src/views/index.ejs
+// =======================
+<%- include('layout', { body: `
+  <div class="row">
+    <div class="col-md-8">
+      <h5 class="mb-3">Stories</h5>
+      <div class="d-flex mb-4">
+        <form action="/stories" method="POST" enctype="multipart/form-data" class="me-3">
+          <div class="d-flex align-items-center">
+            <input type="file" name="image" class="form-control form-control-sm me-2" required />
+            <input type="text" name="caption" class="form-control form-control-sm me-2" placeholder="Caption" />
+            <button class="btn btn-sm btn-primary">Add</button>
+          </div>
+        </form>
+        <div class="d-flex flex-wrap">
+          <% stories.forEach(s => { %>
+            <div class="me-2 text-center">
+              <img src="<%= s.author.avatar %>" class="rounded-circle mb-1" width="40" height="40" />
+              <img src="<%= s.image %>" class="story-thumb" />
+              <div class="small">@<%= s.author.username %></div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+
+      <form action="/posts" method="POST" enctype="multipart/form-data" class="mb-4">
+        <textarea name="content" class="form-control mb-2" placeholder="What's on your mind?"></textarea>
+        <input type="file" name="image" class="form-control mb-2" />
+        <button class="btn btn-primary">Post</button>
+      </form>
+
+      <% posts.forEach(post => { %>
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="d-flex align-items-center mb-2">
+              <img src="<%= post.author.avatar %>" class="rounded-circle me-2" width="32" height="32" />
+              <div>
+                <a href="/profile/<%= post.author.username %>">
+                  <strong>@<%= post.author.username %></strong>
+                </a>
+                <div class="text-muted small"><%= new Date(post.createdAt).toLocaleString() %></div>
+              </div>
+            </div>
+            <% if (post.image) { %>
+              <img src="<%= post.image %>" class="img-fluid rounded mb-2" />
+            <% } %>
+            <p><%= post.content %></p>
+            <form action="/posts/<%= post._id %>/like" method="POST" class="d-inline">
+              <button class="btn btn-sm btn-outline-primary">
+                Like (<%= post.likes.length %>)
+              </button>
+            </form>
+            <details class="mt-2">
+              <summary>Comments</summary>
+              <div class="mt-2">
+                <% /* comments loaded lazily via server route; simple version omitted for brevity */ %>
+                <form action="/posts/<%= post._id %>/comments" method="POST" class="mt-2">
+                  <input name="content" class="form-control form-control-sm" placeholder="Add a comment..." />
+                </form>
+              </div>
+            </details>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+
+    <div class="col-md-4">
+      <h5>Notifications</h5>
+      <% if (notifications.length === 0) { %>
+        <p class="text-muted small">No new notifications.</p>
+      <% } else { %>
+        <ul class="list-group mb-3">
+          <% notifications.forEach(n => { %>
+            <li class="list-group-item small"><%= n.message %></li>
+          <% }) %>
+        </ul>
+      <% } %>
+      <a href="/notifications" class="btn btn-sm btn-outline-secondary">View all</a>
+    </div>
+  </div>
+` }) %>
+
+// =======================
+// src/views/explore.ejs
+// =======================
+<%- include('layout', { body: `
+  <h3 class="mb-3">Explore</h3>
+  <% posts.forEach(post => { %>
+    <div class="card mb-3">
+      <div class="card-body">
+        <a href="/profile/<%= post.author.username %>">
+          <strong>@<%= post.author.username %></strong>
+        </a>
+        <span class="text-muted small"> • <%= new Date(post.createdAt).toLocaleString() %></span>
+        <% if (post.image) { %>
+          <img src="<%= post.image %>" class="img-fluid rounded my-2" />
+        <% } %>
+        <p><%= post.content %></p>
+      </div>
+    </div>
+  <% }) %>
+` }) %>
+
+// =======================
+// src/views/login.ejs
+// =======================
+<%- include('layout', { body: `
+  <div class="row">
+    <div class="col-md-4 mx-auto">
+      <h3 class="mb-3">Login</h3>
+      <% if (error) { %>
+        <div class="alert alert-danger"><%= error %></div>
+      <% } %>
+      <form action="/login" method="POST">
+        <div class="mb-3">
+          <label class="form-label">Email or Username</label>
+          <input type="text" name="emailOrUsername" class="form-control" required />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Password</label>
+          <input type="password" name="password" class="form-control" required />
+        </div>
+        <button class="btn btn-primary w-100">Login</button>
+      </form>
+      <p class="mt-3">No account? <a href="/register">Register</a></p>
+    </div>
+  </div>
+` }) %>
+
+// =======================
+// src/views/register.ejs
+// =======================
+<%- include('layout', { body: `
+  <div class="row">
+    <div class="col-md-4 mx-auto">
+      <h3 class="mb-3">Register</h3>
+      <% if (error) { %>
+        <div class="alert alert-danger"><%= error %></div>
+      <% } %>
+      <form action="/register" method="POST">
+        <div class="mb-3">
+          <label class="form-label">Username</label>
+          <input type="text" name="username" class="form-control" required />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Email</label>
+          <input type="email" name="email" class="form-control" required />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Password</label>
+          <input type="password" name="password" class="form-control" required />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Confirm Password</label>
+          <input type="password" name="confirmPassword" class="form-control" required />
+        </div>
+        <button class="btn btn-primary w-100">Register</button>
+      </form>
+      <p class="mt-3">Already have an account? <a href="/login">Login</a></p>
+    </div>
+  </div>
+` }) %>
+
+// =======================
+// src/views/profile.ejs
+// =======================
+<%- include('layout', { body: `
+  <div class="row">
+    <div class="col-md-4 text-center">
+      <img src="<%= profileUser.avatar %>" class="rounded-circle mb-3" width="120" height="120" />
+      <h3>@<%= profileUser.username %></h3>
+      <p class="text-muted"><%= profileUser.bio || "No bio yet." %></p>
+      <p>
+        <strong><%= profileUser.followers.length %></strong> followers •
+        <strong><%= profileUser.following.length %></strong> following
+      </p>
+      <% if (!isMe) { %>
+        <form action="/profile/<%= profileUser.username %>/follow" method="POST">
+          <button class="btn btn-sm <%= isFollowing ? 'btn-outline-secondary' : 'btn-primary' %>">
+            <%= isFollowing ? 'Unfollow' : 'Follow' %>
+          </button>
+        </form>
+        <a href="/messages/<%= profileUser.username %>" class="btn btn-sm btn-outline-primary mt-2">Message</a>
+      <% } else { %>
+        <a href="/settings/profile" class="btn btn-sm btn-outline-secondary">Edit profile</a>
+      <% } %>
+    </div>
+    <div class="col-md-8">
+      <h4 class="mb-3">Posts</h4>
+      <% posts.forEach(post => { %>
+        <div class="card mb-3">
+          <div class="card-body">
+            <% if (post.image) { %>
+              <img src="<%= post.image %>" class="img-fluid rounded mb-2" />
+            <% } %>
+            <p><%= post.content %></p>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+` }) %>
+
+// =======================
+// src/views/settings_profile.ejs
+// =======================
+<%- include('layout', { body: `
+  <div class="row">
+    <div class="col-md-6 mx-auto">
+      <h3 class="mb-3">Edit profile</h3>
+      <form action="/settings/profile" method="POST">
+        <div class="mb-3">
+          <label class="form-label">Avatar URL</label>
+          <input type="text" name="avatar" class="form-control" value="<%= me.avatar %>" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Bio</label>
+          <textarea name="bio" class="form-control" rows="3"><%= me.bio %></textarea>
+        </div>
+        <button class="btn btn-primary">Save</button>
+      </form>
+    </div>
+  </div>
+` }) %>
+
+// =======================
+// src/views/messages.ejs
+// =======================
+<%- include('layout', { body: `
+  <div class="row">
+    <div class="col-md-3">
+      <h5>Chats</h5>
+      <ul class="list-group">
+        <% users.forEach(u => { %>
+          <a href="/messages/<%= u.username %>" class="list-group-item list-group-item-action <%= activeUser && activeUser.username === u.username ? 'active' : '' %>">
+            <img src="<%= u.avatar %>" class="rounded-circle me-2" width="24" height="24" />
+            @<%= u.username %>
+          </a>
+        <% }) %>
+      </ul>
+    </div>
+    <div class="col-md-9">
+      <% if (!activeUser) { %>
+        <p class="text-muted">Select a user to start chatting.</p>
+      <% } else { %>
+        <h5>Chat with @<%= activeUser.username %></h5>
+        <div class="border rounded p-2 mb-2 chat-thread">
+          <% thread.forEach(m => { %>
+            <div class="mb-1">
+              <strong>@<%= m.from.username %>:</strong> <%= m.content %>
+              <span class="text-muted small"> • <%= new Date(m.createdAt).toLocaleTimeString() %></span>
+            </div>
+          <% }) %>
+        </div>
+        <form action="/messages/<%= activeUser.username %>" method="POST">
+          <div class="input-group">
+            <input type="text" name="content" class="form-control" placeholder="Type a message..." />
+            <button class="btn btn-primary">Send</button>
+          </div>
+        </form>
+      <% } %>
+    </div>
+  </div>
+` }) %>
+
+// =======================
+// src/views/notifications.ejs
+// =======================
+<%- include('layout', { body: `
+  <h3 class="mb-3">Notifications</h3>
+  <% if (list.length === 0) { %>
+    <p class="text-muted">No notifications.</p>
+  <% } else { %>
+    <ul class="list-group">
+      <% list.forEach(n => { %>
+        <li class="list-group-item">
+          <% if (n.fromUser) { %>
+            <img src="<%= n.fromUser.avatar %>" class="rounded-circle me-2" width="24" height="24" />
+            <strong>@<%= n.fromUser.username %></strong>:
+          <% } %>
+          <%= n.message %>
+          <span class="text-muted small"> • <%= new Date(n.createdAt).toLocaleString() %></span>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
+` }) %>
+
+// =======================
+// public/style.css
+// =======================
+body {
+  background-color: #f5f5f5;
+}
+.card {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.story-thumb {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 2px solid #007bff;
+}
+.chat-thread {
+  max-height: 400px;
+  overflow-y: auto;
+}
