@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Projects — IRON WILLZ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="assets/css/themes.css" />
+    <link rel="stylesheet" href="assets/css/main.css" />
+    <link rel="stylesheet" href="assets/css/animations.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="nav">
+        <div class="container nav-inner">
+          <a href="index.html" class="brand">
+            <div class="brand-mark"></div>
+            <span class="brand-text">IRON WILLZ</span>
+          </a>
+
+          <nav class="nav-links">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="about.html" class="nav-link">About</a>
+            <a href="projects.html" class="nav-link nav-link--active"
+              >Projects</a
+            >
+            <a href="contact.html" class="nav-link">Contact</a>
+          </nav>
+
+          <a href="contact.html" class="btn-primary">Book a call</a>
+        </div>
+      </header>
+
+      <main>
+        <section class="section">
+          <div class="container">
+            <header class="section-header reveal">
+              <div>
+                <div class="section-kicker">Selected work</div>
+                <h1 class="section-title">
+                  A small set of builds that show how I think.
+                </h1>
+              </div>
+              <p class="section-subtitle">
+                Each project is a system: visuals, behaviour, and narrative
+                working together—not just a pretty screen.
+              </p>
+            </header>
+
+            <div class="card-grid" data-project-grid>
+              <!-- Filled by projects.js from projects.json -->
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <div class="container footer-inner">
+          <span
+            >© <span id="year"></span> IRON WILLZ. All rights
+            reserved.</span
+          >
+          <div class="footer-links">
+            <a href="#">GitHub</a>
+            <a href="#">LinkedIn</a>
+            <a href="#">Spotify</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/scroll.js"></script>
+    <script src="assets/js/projects.js"></script>
+    <script>
+      document.getElementById("year").textContent = new Date().getFullYear();
+    </script>
+  </body>
+</html>
