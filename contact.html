@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Contact — IRON WILLZ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="assets/css/themes.css" />
+    <link rel="stylesheet" href="assets/css/main.css" />
+    <link rel="stylesheet" href="assets/css/animations.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="nav">
+        <div class="container nav-inner">
+          <a href="index.html" class="brand">
+            <div class="brand-mark"></div>
+            <span class="brand-text">IRON WILLZ</span>
+          </a>
+
+          <nav class="nav-links">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="about.html" class="nav-link">About</a>
+            <a href="projects.html" class="nav-link">Projects</a>
+            <a href="contact.html" class="nav-link nav-link--active"
+              >Contact</a
+            >
+          </nav>
+
+          <a href="contact.html" class="btn-primary">Book a call</a>
+        </div>
+      </header>
+
+      <main>
+        <section class="section">
+          <div class="container">
+            <header class="section-header reveal">
+              <div>
+                <div class="section-kicker">Contact</div>
+                <h1 class="section-title">
+                  Let’s design something that feels like a launch, not a layout.
+                </h1>
+              </div>
+              <p class="section-subtitle">
+                Tell me about the project, the stakes, and the feeling you want
+                people to leave with.
+              </p>
+            </header>
+
+            <form class="form reveal reveal-delay-1">
+              <div class="form-row">
+                <div class="form-field">
+                  <label for="name">Name</label>
+                  <input id="name" type="text" placeholder="Your name" />
+                </div>
+                <div class="form-field">
+                  <label for="email">Email</label>
+                  <input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
+                  />
+                </div>
+              </div>
+
+              <div class="form-field">
+                <label for="project">Project type</label>
+                <input
+                  id="project"
+                  type="text"
+                  placeholder="Portfolio, product UI, music‑driven visuals..."
+                />
+              </div>
+
+              <div class="form-field">
+                <label for="message">Project details</label>
+                <textarea
+                  id="message"
+                  placeholder="Timeline, goals, links, and anything else that matters."
+                ></textarea>
+              </div>
+
+              <button type="submit" class="btn-primary">
+                Send enquiry
+              </button>
+            </form>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <div class="container footer-inner">
+          <span
+            >© <span id="year"></span> IRON WILLZ. All rights
+            reserved.</span
+          >
+          <div class="footer-links">
+            <a href="#">GitHub</a>
+            <a href="#">LinkedIn</a>
+            <a href="#">Spotify</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/scroll.js"></script>
+    <script>
+      document.getElementById("year").textContent = new Date().getFullYear();
+      document
+        .querySelector("form")
+        .addEventListener("submit", (e) => e.preventDefault());
+    </script>
+  </body>
+</html>
