@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>IRON WILLZ — Luxury Portfolio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="assets/css/themes.css" />
+    <link rel="stylesheet" href="assets/css/main.css" />
+    <link rel="stylesheet" href="assets/css/animations.css" />
+  </head>
+  <body>
+    <div class="page">
+      <!-- NAV -->
+      <header class="nav">
+        <div class="container nav-inner">
+          <a href="index.html" class="brand">
+            <div class="brand-mark"></div>
+            <span class="brand-text">IRON WILLZ</span>
+          </a>
+
+          <nav class="nav-links">
+            <a href="index.html" class="nav-link nav-link--active">Home</a>
+            <a href="about.html" class="nav-link">About</a>
+            <a href="projects.html" class="nav-link">Projects</a>
+            <a href="contact.html" class="nav-link">Contact</a>
+          </nav>
+
+          <a href="contact.html" class="btn-primary">Book a call</a>
+        </div>
+      </header>
+
+      <main>
+        <!-- HERO -->
+        <section class="hero">
+          <div class="container hero-grid">
+            <div class="reveal">
+              <div class="hero-eyebrow">Luxury black &amp; gold portfolio</div>
+              <h1 class="hero-title">
+                Crafting <span>cinematic</span> digital experiences that feel
+                like a premium brand launch.
+              </h1>
+              <p class="hero-tagline">
+                I’m Willz — blending design, code, and sound to build interfaces
+                that look expensive and feel effortless.
+              </p>
+
+              <div class="hero-meta">
+                <span>Portfolio &amp; brand systems</span>
+                <span>Interactive experiences</span>
+                <span>Music‑driven visuals</span>
+              </div>
+            </div>
+
+            <aside class="hero-card reveal reveal-delay-1">
+              <div class="hero-card-tag">Featured profile</div>
+              <div class="hero-card-main">
+                <div class="hero-avatar">
+                  <img src="assets/images/profile.jpg" alt="Willz portrait" />
+                </div>
+                <div class="hero-card-text">
+                  <h3>IRON WILLZ</h3>
+                  <p>Designer • Developer • Music‑driven storyteller</p>
+                </div>
+              </div>
+              <div class="hero-card-pill">Available for select projects</div>
+            </aside>
+          </div>
+        </section>
+
+        <!-- HIGHLIGHTS -->
+        <section class="section">
+          <div class="container">
+            <header class="section-header reveal">
+              <div>
+                <div class="section-kicker">What I build</div>
+                <h2 class="section-title">
+                  High‑impact visuals with clinical precision.
+                </h2>
+              </div>
+              <p class="section-subtitle">
+                From clinical simulators to music‑driven portfolios, I design
+                systems that balance clarity, emotion, and performance.
+              </p>
+            </header>
+
+            <div class="card-grid">
+              <article class="card reveal">
+                <div class="card-kicker">01 • Portfolio systems</div>
+                <h3 class="card-title">Signature personal brands</h3>
+                <p class="card-body">
+                  Cohesive, multi‑page experiences that feel like a curated
+                  gallery, not a CV. Every page, on‑brand.
+                </p>
+                <div class="card-meta">
+                  <span>Strategy • Visuals • Build</span>
+                </div>
+              </article>
+
+              <article class="card reveal reveal-delay-1">
+                <div class="card-kicker">02 • Product UI</div>
+                <h3 class="card-title">Clinical‑grade interfaces</h3>
+                <p class="card-body">
+                  Interfaces that support complex decisions without noise:
+                  hierarchy, feedback, and focus built in.
+                </p>
+                <div class="card-meta">
+                  <span>UX • UI • Systems</span>
+                </div>
+              </article>
+
+              <article class="card reveal reveal-delay-2">
+                <div class="card-kicker">03 • Music &amp; motion</div>
+                <h3 class="card-title">Sound‑aligned visuals</h3>
+                <p class="card-body">
+                  Visual identities that move with the music—perfect for
+                  producers, DJs, and performance‑driven brands.
+                </p>
+                <div class="card-meta">
+                  <span>Music • Visuals</span>
+                </div>
+              </article>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- FOOTER -->
+      <footer class="footer">
+        <div class="container footer-inner">
+          <span
+            >© <span id="year"></span> IRON WILLZ. All rights
+            reserved.</span
+          >
+          <div class="footer-links">
+            <a href="#">GitHub</a>
+            <a href="#">LinkedIn</a>
+            <a href="#">Spotify</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/scroll.js"></script>
+    <script>
+      document.getElementById("year").textContent = new Date().getFullYear();
+    </script>
+  </body>
+</html>
