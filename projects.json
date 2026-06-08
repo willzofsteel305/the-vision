@@ -1,0 +1,23 @@
+[
+  {
+    "title": "IRON WILLZ Experience",
+    "category": "Signature Build",
+    "description": "A cinematic, high-contrast personal brand experience blending motion, music, and interactive storytelling.",
+    "stack": "HTML • CSS • JS • Cloudflare Pages",
+    "link": "#"
+  },
+  {
+    "title": "Clinical Simulator UI",
+    "category": "Product Design",
+    "description": "A focused, distraction-free interface for complex clinical decision-making with clear hierarchy and feedback.",
+    "stack": "Figma • Design Systems",
+    "link": "#"
+  },
+  {
+    "title": "Hooks Music Visual Hub",
+    "category": "Music & Visuals",
+    "description": "A visual-first hub for releases, playlists, and live sets with motion-reactive accents.",
+    "stack": "Web • Music • Visuals",
+    "link": "#"
+  }
+]
