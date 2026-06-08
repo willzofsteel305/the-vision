@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>About — IRON WILLZ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="assets/css/themes.css" />
+    <link rel="stylesheet" href="assets/css/main.css" />
+    <link rel="stylesheet" href="assets/css/animations.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="nav">
+        <div class="container nav-inner">
+          <a href="index.html" class="brand">
+            <div class="brand-mark"></div>
+            <span class="brand-text">IRON WILLZ</span>
+          </a>
+
+          <nav class="nav-links">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="about.html" class="nav-link nav-link--active">About</a>
+            <a href="projects.html" class="nav-link">Projects</a>
+            <a href="contact.html" class="nav-link">Contact</a>
+          </nav>
+
+          <a href="contact.html" class="btn-primary">Book a call</a>
+        </div>
+      </header>
+
+      <main>
+        <section class="section">
+          <div class="container">
+            <header class="section-header reveal">
+              <div>
+                <div class="section-kicker">About</div>
+                <h1 class="section-title">
+                  A designer‑developer who thinks in sound, systems, and story.
+                </h1>
+              </div>
+              <p class="section-subtitle">
+                I bridge clinical clarity and music‑driven energy—building
+                experiences that are both precise and emotionally charged.
+              </p>
+            </header>
+
+            <div class="card-grid">
+              <article class="card reveal">
+                <div class="card-kicker">Background</div>
+                <h3 class="card-title">Clinical &amp; creative</h3>
+                <p class="card-body">
+                  From clinical simulators to personal brands, I’ve worked in
+                  spaces where stakes are high and details matter. That mindset
+                  carries into every pixel and interaction.
+                </p>
+              </article>
+
+              <article class="card reveal reveal-delay-1">
+                <div class="card-kicker">Approach</div>
+                <h3 class="card-title">Systems over one‑offs</h3>
+                <p class="card-body">
+                  I don’t just design pages—I design systems: typography,
+                  spacing, motion, and behaviours that scale with you.
+                </p>
+              </article>
+
+              <article class="card reveal reveal-delay-2">
+                <div class="card-kicker">Signature</div>
+                <h3 class="card-title">Luxury black &amp; gold</h3>
+                <p class="card-body">
+                  High contrast, controlled glow, and restrained motion. The
+                  goal: your work feels like a premium launch, not a template.
+                </p>
+              </article>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <div class="container footer-inner">
+          <span
+            >© <span id="year"></span> IRON WILLZ. All rights
+            reserved.</span
+          >
+          <div class="footer-links">
+            <a href="#">GitHub</a>
+            <a href="#">LinkedIn</a>
+            <a href="#">Spotify</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/scroll.js"></script>
+    <script>
+      document.getElementById("year").textContent = new Date().getFullYear();
+    </script>
+  </body>
+</html>
