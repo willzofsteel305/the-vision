@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" role="img" aria-labelledby="title desc">
+  <title id="title">Profile placeholder portrait</title>
+  <desc id="desc">Stylized black and gold circular portrait placeholder for IRON WILLZ.</desc>
+  <defs>
+    <radialGradient id="bg" cx="30%" cy="20%">
+      <stop offset="0%" stop-color="#fff5d0" />
+      <stop offset="35%" stop-color="#f5c76b" />
+      <stop offset="70%" stop-color="#8b6a2b" />
+      <stop offset="100%" stop-color="#050509" />
+    </radialGradient>
+  </defs>
+  <rect width="320" height="320" fill="#050509" />
+  <circle cx="160" cy="160" r="132" fill="url(#bg)" />
+  <circle cx="160" cy="140" r="52" fill="#12121c" opacity="0.65" />
+  <path d="M80 262c14-44 46-68 80-68s66 24 80 68" fill="#12121c" opacity="0.65" />
+</svg>
