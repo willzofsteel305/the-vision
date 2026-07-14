@@ -3,7 +3,10 @@ async function loadProjects() {
   if (!grid) return;
 
   try {
-    const res = await fetch("projects.json");
+    const res = await fetch("data/projects.json");
+    if (!res.ok) {
+      throw new Error(`Projects request failed: ${res.status}`);
+    }
     const projects = await res.json();
 
     grid.innerHTML = projects

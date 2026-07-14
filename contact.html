@@ -46,6 +46,11 @@
               </p>
             </header>
 
+            <p class="section-subtitle contact-note reveal reveal-delay-1">
+              This portfolio is currently static. Please reach out via
+              <a href="https://github.com/willzofsteel305" target="_blank" rel="noreferrer">GitHub</a>.
+            </p>
+
             <form class="form reveal reveal-delay-1">
               <div class="form-row">
                 <div class="form-field">
@@ -79,8 +84,8 @@
                 ></textarea>
               </div>
 
-              <button type="submit" class="btn-primary">
-                Send enquiry
+              <button type="button" class="btn-primary" disabled>
+                Static form preview
               </button>
             </form>
           </div>
@@ -90,13 +95,12 @@
       <footer class="footer">
         <div class="container footer-inner">
           <span
-            >© <span id="year"></span> IRON WILLZ. All rights
-            reserved.</span
+            >© <span data-year></span> IRON WILLZ. All rights reserved.</span
           >
           <div class="footer-links">
-            <a href="#">GitHub</a>
-            <a href="#">LinkedIn</a>
-            <a href="#">Spotify</a>
+            <a href="https://github.com/willzofsteel305" target="_blank" rel="noreferrer">GitHub</a>
+            <a href="projects.html">Projects</a>
+            <a href="contact.html">Contact</a>
           </div>
         </div>
       </footer>
@@ -104,11 +108,5 @@
 
     <script src="assets/js/main.js"></script>
     <script src="assets/js/scroll.js"></script>
-    <script>
-      document.getElementById("year").textContent = new Date().getFullYear();
-      document
-        .querySelector("form")
-        .addEventListener("submit", (e) => e.preventDefault());
-    </script>
   </body>
 </html>

@@ -47,7 +47,7 @@
             </header>
 
             <div class="card-grid" data-project-grid>
-              <!-- Filled by projects.js from projects.json -->
+              <!-- Filled by projects.js from data/projects.json -->
             </div>
           </div>
         </section>
@@ -56,13 +56,12 @@
       <footer class="footer">
         <div class="container footer-inner">
           <span
-            >© <span id="year"></span> IRON WILLZ. All rights
-            reserved.</span
+            >© <span data-year></span> IRON WILLZ. All rights reserved.</span
           >
           <div class="footer-links">
-            <a href="#">GitHub</a>
-            <a href="#">LinkedIn</a>
-            <a href="#">Spotify</a>
+            <a href="https://github.com/willzofsteel305" target="_blank" rel="noreferrer">GitHub</a>
+            <a href="projects.html">Projects</a>
+            <a href="contact.html">Contact</a>
           </div>
         </div>
       </footer>
@@ -71,8 +70,5 @@
     <script src="assets/js/main.js"></script>
     <script src="assets/js/scroll.js"></script>
     <script src="assets/js/projects.js"></script>
-    <script>
-      document.getElementById("year").textContent = new Date().getFullYear();
-    </script>
   </body>
 </html>

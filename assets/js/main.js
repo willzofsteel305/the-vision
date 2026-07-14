@@ -1,2 +1,8 @@
-// Put any global behaviour here
-console.log("Luxury black & gold portfolio loaded.");
+function setCurrentYear() {
+  const year = new Date().getFullYear();
+  document.querySelectorAll("[data-year]").forEach((el) => {
+    el.textContent = year;
+  });
+}
+
+document.addEventListener("DOMContentLoaded", setCurrentYear);
