@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="IRON WILLZ social preview">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#151520" />
+      <stop offset="100%" stop-color="#050509" />
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#f5c76b" />
+      <stop offset="50%" stop-color="#fff5d0" />
+      <stop offset="100%" stop-color="#cfa85a" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <rect x="60" y="60" width="1080" height="510" rx="28" fill="none" stroke="#f5c76b" stroke-opacity="0.35" />
+  <text x="120" y="250" fill="url(#gold)" font-family="Arial, sans-serif" font-size="86" font-weight="700">IRON WILLZ</text>
+  <text x="120" y="332" fill="#f7f7f7" font-family="Arial, sans-serif" font-size="44">Luxury portfolio experiences</text>
+  <text x="120" y="410" fill="#a3a3b5" font-family="Arial, sans-serif" font-size="32">Design · Motion · Performance</text>
+</svg>

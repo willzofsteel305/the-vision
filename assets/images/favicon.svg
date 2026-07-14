@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="IRON WILLZ favicon">
+  <defs>
+    <radialGradient id="gold" cx="30%" cy="20%" r="80%">
+      <stop offset="0%" stop-color="#fff7dd" />
+      <stop offset="35%" stop-color="#f5c76b" />
+      <stop offset="100%" stop-color="#8b6a2b" />
+    </radialGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#050509" />
+  <circle cx="32" cy="32" r="22" fill="url(#gold)" />
+  <text x="32" y="39" font-size="18" text-anchor="middle" fill="#050509" font-family="Arial, sans-serif" font-weight="700">W</text>
+</svg>

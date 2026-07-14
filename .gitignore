@@ -1,0 +1,16 @@
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Runtime logs
+*.log
+
+# Node (if ever used locally)
+node_modules/
+
+# Python cache
+__pycache__/

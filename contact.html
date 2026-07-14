@@ -4,6 +4,35 @@
     <meta charset="UTF-8" />
     <title>Contact — IRON WILLZ</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Contact IRON WILLZ for portfolio, product UI, and visual design projects."
+    />
+    <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Contact — IRON WILLZ" />
+    <meta
+      property="og:description"
+      content="Start a new project with IRON WILLZ. Send details through the contact form."
+    />
+    <meta
+      property="og:url"
+      content="https://willzofsteel305.github.io/the-vision/contact.html"
+    />
+    <meta
+      property="og:image"
+      content="https://willzofsteel305.github.io/the-vision/assets/images/social-preview.svg"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Contact — IRON WILLZ" />
+    <meta
+      name="twitter:description"
+      content="Start a new project with IRON WILLZ. Send details through the contact form."
+    />
+    <meta
+      name="twitter:image"
+      content="https://willzofsteel305.github.io/the-vision/assets/images/social-preview.svg"
+    />
     <link rel="stylesheet" href="assets/css/themes.css" />
     <link rel="stylesheet" href="assets/css/main.css" />
     <link rel="stylesheet" href="assets/css/animations.css" />
@@ -46,18 +75,28 @@
               </p>
             </header>
 
-            <form class="form reveal reveal-delay-1">
+            <form class="form reveal reveal-delay-1" data-contact-form novalidate>
               <div class="form-row">
                 <div class="form-field">
                   <label for="name">Name</label>
-                  <input id="name" type="text" placeholder="Your name" />
+                  <input
+                    id="name"
+                    name="name"
+                    type="text"
+                    autocomplete="name"
+                    placeholder="Your name"
+                    required
+                  />
                 </div>
                 <div class="form-field">
                   <label for="email">Email</label>
                   <input
                     id="email"
+                    name="email"
                     type="email"
+                    autocomplete="email"
                     placeholder="you@example.com"
+                    required
                   />
                 </div>
               </div>
@@ -66,7 +105,9 @@
                 <label for="project">Project type</label>
                 <input
                   id="project"
+                  name="project"
                   type="text"
+                  autocomplete="organization-title"
                   placeholder="Portfolio, product UI, music‑driven visuals..."
                 />
               </div>
@@ -75,13 +116,34 @@
                 <label for="message">Project details</label>
                 <textarea
                   id="message"
+                  name="message"
                   placeholder="Timeline, goals, links, and anything else that matters."
+                  minlength="20"
+                  required
                 ></textarea>
               </div>
 
-              <button type="submit" class="btn-primary">
-                Send enquiry
-              </button>
+              <div class="form-honeypot" aria-hidden="true">
+                <label for="website">Website</label>
+                <input
+                  id="website"
+                  name="website"
+                  type="text"
+                  tabindex="-1"
+                  autocomplete="off"
+                />
+              </div>
+
+              <p class="form-note">
+                This form opens your email app with your message prefilled. Prefer
+                direct email?
+                <a href="mailto:willzofsteel305+vision@users.noreply.github.com"
+                  >Use this mail link</a
+                >.
+              </p>
+              <p class="form-status" data-form-status role="status" aria-live="polite"></p>
+
+              <button type="submit" class="btn-primary">Send enquiry</button>
             </form>
           </div>
         </section>
@@ -90,13 +152,17 @@
       <footer class="footer">
         <div class="container footer-inner">
           <span
-            >© <span id="year"></span> IRON WILLZ. All rights
-            reserved.</span
+            >© <span id="year"></span> IRON WILLZ. All rights reserved.</span
           >
           <div class="footer-links">
-            <a href="#">GitHub</a>
-            <a href="#">LinkedIn</a>
-            <a href="#">Spotify</a>
+            <a
+              href="https://github.com/willzofsteel305"
+              target="_blank"
+              rel="noopener noreferrer"
+              >GitHub</a
+            >
+            <a href="projects.html">Projects</a>
+            <a href="contact.html">Contact</a>
           </div>
         </div>
       </footer>
@@ -104,11 +170,6 @@
 
     <script src="assets/js/main.js"></script>
     <script src="assets/js/scroll.js"></script>
-    <script>
-      document.getElementById("year").textContent = new Date().getFullYear();
-      document
-        .querySelector("form")
-        .addEventListener("submit", (e) => e.preventDefault());
-    </script>
+    <script src="assets/js/contact.js"></script>
   </body>
 </html>
