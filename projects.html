@@ -4,6 +4,35 @@
     <meta charset="UTF-8" />
     <title>Projects — IRON WILLZ</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Selected IRON WILLZ projects spanning portfolio systems, product UI, and music-driven visuals."
+    />
+    <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Projects — IRON WILLZ" />
+    <meta
+      property="og:description"
+      content="A curated set of builds that show IRON WILLZ systems thinking in action."
+    />
+    <meta
+      property="og:url"
+      content="https://willzofsteel305.github.io/the-vision/projects.html"
+    />
+    <meta
+      property="og:image"
+      content="https://willzofsteel305.github.io/the-vision/assets/images/social-preview.svg"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Projects — IRON WILLZ" />
+    <meta
+      name="twitter:description"
+      content="A curated set of builds that show IRON WILLZ systems thinking in action."
+    />
+    <meta
+      name="twitter:image"
+      content="https://willzofsteel305.github.io/the-vision/assets/images/social-preview.svg"
+    />
     <link rel="stylesheet" href="assets/css/themes.css" />
     <link rel="stylesheet" href="assets/css/main.css" />
     <link rel="stylesheet" href="assets/css/animations.css" />
@@ -46,9 +75,13 @@
               </p>
             </header>
 
-            <div class="card-grid" data-project-grid>
-              <!-- Filled by projects.js from projects.json -->
-            </div>
+            <div class="card-grid" data-project-grid aria-live="polite"></div>
+            <p class="status-message" data-project-status>Loading projects…</p>
+            <noscript>
+              <p class="status-message status-message--error">
+                JavaScript is required to load project cards.
+              </p>
+            </noscript>
           </div>
         </section>
       </main>
@@ -56,13 +89,17 @@
       <footer class="footer">
         <div class="container footer-inner">
           <span
-            >© <span id="year"></span> IRON WILLZ. All rights
-            reserved.</span
+            >© <span id="year"></span> IRON WILLZ. All rights reserved.</span
           >
           <div class="footer-links">
-            <a href="#">GitHub</a>
-            <a href="#">LinkedIn</a>
-            <a href="#">Spotify</a>
+            <a
+              href="https://github.com/willzofsteel305"
+              target="_blank"
+              rel="noopener noreferrer"
+              >GitHub</a
+            >
+            <a href="projects.html">Projects</a>
+            <a href="contact.html">Contact</a>
           </div>
         </div>
       </footer>
@@ -71,8 +108,5 @@
     <script src="assets/js/main.js"></script>
     <script src="assets/js/scroll.js"></script>
     <script src="assets/js/projects.js"></script>
-    <script>
-      document.getElementById("year").textContent = new Date().getFullYear();
-    </script>
   </body>
 </html>

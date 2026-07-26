@@ -1,2 +1,8 @@
-// Put any global behaviour here
-console.log("Luxury black & gold portfolio loaded.");
+function setFooterYear() {
+  const year = new Date().getFullYear();
+  document.querySelectorAll("#year").forEach((node) => {
+    node.textContent = year;
+  });
+}
+
+document.addEventListener("DOMContentLoaded", setFooterYear);
