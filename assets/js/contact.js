@@ -1,4 +1,4 @@
-const CONTACT_EMAIL = "willzofsteel305+vision@users.noreply.github.com";
+const CONTACT_EMAIL = "willzofsteel305@gmail.com";
 const MIN_HUMAN_TIME_MS = 2500;
 
 function setFormStatus(statusNode, message, type = "info") {
