@@ -38,14 +38,16 @@ If the JSON cannot be loaded, `projects.html` will automatically show fallback c
 
 ## Contact form behavior
 
-`contact.html` uses a **mailto** workflow (no backend required):
+`contact.html` uses a Gmail web compose workflow (no backend required):
 
 - validates required fields client-side
 - includes a honeypot field + minimum submit delay as lightweight spam protection
-- opens the visitor's email app with prefilled content
+- opens the visitor's Gmail compose screen with prefilled To / Subject / Body (or redirects to Gmail sign-in if the visitor is not signed in)
 - shows success/error status text in-page
 
-To route enquiries to another inbox, update `CONTACT_EMAIL` in `assets/js/contact.js`.
+To route enquiries to another inbox, update `CONTACT_EMAIL` in `assets/js/contact.js` (look for the `CONTACT_EMAIL` constant at the top of the file).
+
+If you prefer to use the visitor's native mail client instead of Gmail, replace the Gmail URL in `buildMailtoUrl()` inside `assets/js/contact.js` with a standard `mailto:` link, or ask me and I can add an automatic fallback that tries Gmail first and falls back to `mailto:`.
 
 ## Deployment notes
 
