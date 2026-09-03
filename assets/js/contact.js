@@ -32,9 +32,15 @@ function buildMailtoUrl(fields) {
     .filter(Boolean)
     .join("\n");
 
-  return `mailto:${encodeURIComponent(CONTACT_EMAIL)}?subject=${encodeURIComponent(
-    subject
-  )}&body=${encodeURIComponent(body)}`;
+  // Gmail web compose URL — opens Gmail's compose with to/subject/body prefilled.
+  // Uses URLSearchParams to ensure proper encoding.
+  const gmailBase = "https://mail.google.com/mail/?view=cm&fs=1";
+  const params = new URLSearchParams({
+    to: CONTACT_EMAIL,
+    su: subject,
+    body: body,
+  });
+  return `${gmailBase}&${params.toString()}`;
 }
 
 function initContactForm() {
@@ -82,10 +88,12 @@ function initContactForm() {
     };
 
     try {
+      // Navigate to Gmail compose (or the user's webmail compose). If the user
+      // isn't signed in to Gmail this will redirect them to Gmail's sign-in page.
       window.location.href = buildMailtoUrl(fields);
       setFormStatus(
         status,
-        "Your email app should open now. If it does not, use the direct mail link above.",
+        "A Gmail compose window should open. If it doesn't, use the direct mail link above.",
         "success"
       );
       form.reset();
