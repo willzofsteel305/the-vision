@@ -41,13 +41,15 @@ If the JSON cannot be loaded, `projects.html` will automatically show fallback c
 `contact.html` uses a Gmail web compose workflow (no backend required):
 
 - validates required fields client-side
-- includes a honeypot field + minimum submit delay as lightweight spam protection
-- opens the visitor's Gmail compose screen with prefilled To / Subject / Body (or redirects to Gmail sign-in if the visitor is not signed in)
-- shows success/error status text in-page
+- includes a honeypot field + 2.5-second minimum submit delay from meaningful form interaction as lightweight spam protection
+- opens a prefilled Gmail compose draft (new tab preferred, same-tab fallback if popups are blocked)
+- provides a prefilled `mailto:` fallback link using the same recipient/subject/body
+- shows status text in-page to explain that a draft/link was prepared and the visitor must still review and click Send
+- privacy limitation: this static workflow places form details in Gmail/`mailto:` URL query strings, which may appear in browser history or URL logging
 
 To route enquiries to another inbox, update `CONTACT_EMAIL` in `assets/js/contact.js` (look for the `CONTACT_EMAIL` constant at the top of the file).
 
-If you prefer to use the visitor's native mail client instead of Gmail, replace the Gmail URL in `buildMailtoUrl()` inside `assets/js/contact.js` with a standard `mailto:` link, or ask me and I can add an automatic fallback that tries Gmail first and falls back to `mailto:`.
+If you prefer to use the visitor's native mail client instead of Gmail, replace the Gmail URL in `buildGmailComposeUrl()` inside `assets/js/contact.js` with a standard `mailto:` link, or ask me and I can add an automatic fallback that tries Gmail first and falls back to `mailto:`.
 
 ## Deployment notes
 

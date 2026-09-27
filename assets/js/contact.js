@@ -16,7 +16,7 @@ function setFormStatus(statusNode, message, type = "info") {
   }
 }
 
-function buildMailtoUrl(fields) {
+function buildEmailDraft(fields) {
   const subject = fields.project
     ? `New project enquiry: ${fields.project}`
     : "New project enquiry";
@@ -32,15 +32,29 @@ function buildMailtoUrl(fields) {
     .filter(Boolean)
     .join("\n");
 
-  // Gmail web compose URL — opens Gmail's compose with to/subject/body prefilled.
-  // Uses URLSearchParams to ensure proper encoding.
-  const gmailBase = "https://mail.google.com/mail/?view=cm&fs=1";
+  return { subject, body };
+}
+
+function buildGmailComposeUrl({ subject, body }) {
+  // Privacy note: this static-site workflow embeds subject/body in URL query
+  // parameters, so project details may appear in browser history or URL logs.
+  // A backend is required to avoid this exposure.
+  const gmailUrl = new URL("https://mail.google.com/mail/u/0/");
+  gmailUrl.searchParams.set("view", "cm");
+  gmailUrl.searchParams.set("fs", "1");
+  gmailUrl.searchParams.set("tf", "1");
+  gmailUrl.searchParams.set("to", CONTACT_EMAIL);
+  gmailUrl.searchParams.set("su", subject);
+  gmailUrl.searchParams.set("body", body);
+  return gmailUrl.toString();
+}
+
+function buildMailtoUrl({ subject, body }) {
   const params = new URLSearchParams({
-    to: CONTACT_EMAIL,
-    su: subject,
-    body: body,
+    subject,
+    body,
   });
-  return `${gmailBase}&${params.toString()}`;
+  return `mailto:${CONTACT_EMAIL}?${params.toString()}`;
 }
 
 function initContactForm() {
@@ -48,25 +62,34 @@ function initContactForm() {
   if (!form) return;
 
   const status = form.querySelector("[data-form-status]");
-  let createdAt = Date.now();
+  const fallbackLink = form.querySelector("[data-mailto-fallback]");
+  let lastMeaningfulInteractionAt = 0;
+
+  form.addEventListener("input", (event) => {
+    if (!(event.target instanceof HTMLElement)) return;
+    if (event.target.getAttribute("name") === "website") return;
+    lastMeaningfulInteractionAt = Date.now();
+  });
 
   form.addEventListener("submit", (event) => {
     event.preventDefault();
 
     const websiteTrap = form.elements.website?.value?.trim();
     if (websiteTrap) {
-      setFormStatus(
-        status,
-        "Thanks — your message has been received.",
-        "success"
-      );
-      form.reset();
-      createdAt = Date.now();
+      setFormStatus(status, "Thanks. Please use the direct email option below.");
       return;
     }
 
-    if (Date.now() - createdAt < MIN_HUMAN_TIME_MS) {
-      setFormStatus(status, "Please wait a second before submitting.", "error");
+    if (!lastMeaningfulInteractionAt) {
+      lastMeaningfulInteractionAt = Date.now();
+    }
+
+    if (Date.now() - lastMeaningfulInteractionAt < MIN_HUMAN_TIME_MS) {
+      setFormStatus(
+        status,
+        "Please wait at least 2.5 seconds after your last update before opening a draft.",
+        "error"
+      );
       return;
     }
 
@@ -87,22 +110,38 @@ function initContactForm() {
       message: form.elements.message.value.trim(),
     };
 
+    const emailDraft = buildEmailDraft(fields);
+    const gmailComposeUrl = buildGmailComposeUrl(emailDraft);
+    const mailtoFallbackUrl = buildMailtoUrl(emailDraft);
+
+    if (fallbackLink) {
+      fallbackLink.href = mailtoFallbackUrl;
+    }
+
     try {
-      // Navigate to Gmail compose (or the user's webmail compose). If the user
-      // isn't signed in to Gmail this will redirect them to Gmail's sign-in page.
-      window.location.href = buildMailtoUrl(fields);
+      const composeWindow = window.open(gmailComposeUrl, "_blank");
+
+      if (!composeWindow) {
+        setFormStatus(
+          status,
+          "A new tab was blocked, so Gmail will open in this tab. If Gmail is unavailable, use the prefilled email fallback link below.",
+          "info"
+        );
+        window.location.href = gmailComposeUrl;
+        return;
+      }
+      composeWindow.opener = null;
+
       setFormStatus(
         status,
-        "A Gmail compose window should open. If it doesn't, use the direct mail link above.",
+        "A Gmail draft was prepared in a new tab. Please review it and click Send. If needed, use the prefilled email fallback link below.",
         "success"
       );
-      form.reset();
-      createdAt = Date.now();
     } catch (error) {
       console.error("Failed to open email client", error);
       setFormStatus(
         status,
-        "Could not open your email app. Please use the direct mail link above.",
+        "Could not open Gmail. Use the prefilled email fallback link below.",
         "error"
       );
     }
