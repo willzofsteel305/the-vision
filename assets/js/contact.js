@@ -16,31 +16,60 @@ function setFormStatus(statusNode, message, type = "info") {
   }
 }
 
+function buildEmailBody(fields) {
+  const lines = [];
+
+  if (fields.project && fields.project.trim()) {
+    lines.push(`Project type: ${fields.project.trim()}`);
+  }
+
+  lines.push("");
+  lines.push("Project details:");
+  lines.push(fields.message ? fields.message.trim() : "");
+
+  return lines.join("\n");
+}
+
+function buildGmailUrl(fields) {
+  const subject = fields.project
+    ? `New project enquiry: ${fields.project}`
+    : "New project enquiry";
+
+  const body = buildEmailBody(fields);
+
+  // Note: the browser embeds the draft content into the URL query string when
+  // opening Gmail. That means the project details may appear in browser history,
+  // logs, or URL inspection tooling. This is a static-site limitation.
+  const gmailBase = "https://mail.google.com/mail/?view=cm&fs=1";
+  const params = new URLSearchParams({
+    to: CONTACT_EMAIL,
+    su: subject,
+    body,
+  });
+
+  return `${gmailBase}&${params.toString()}`;
+}
+
 function buildMailtoUrl(fields) {
   const subject = fields.project
     ? `New project enquiry: ${fields.project}`
     : "New project enquiry";
 
-  const body = [
-    `Name: ${fields.name}`,
-    `Email: ${fields.email}`,
-    fields.project ? `Project type: ${fields.project}` : null,
-    "",
-    "Project details:",
-    fields.message,
-  ]
-    .filter(Boolean)
-    .join("\n");
-
-  // Gmail web compose URL — opens Gmail's compose with to/subject/body prefilled.
-  // Uses URLSearchParams to ensure proper encoding.
-  const gmailBase = "https://mail.google.com/mail/?view=cm&fs=1";
+  const body = buildEmailBody(fields);
   const params = new URLSearchParams({
-    to: CONTACT_EMAIL,
-    su: subject,
-    body: body,
+    subject,
+    body,
   });
-  return `${gmailBase}&${params.toString()}`;
+
+  return `mailto:${CONTACT_EMAIL}?${params.toString()}`;
+}
+
+function setDirectEmailLink(linkNode, fields) {
+  if (!linkNode) return;
+
+  const url = buildMailtoUrl(fields);
+  linkNode.href = url;
+  linkNode.setAttribute("aria-label", "Open a direct email draft for this enquiry");
 }
 
 function initContactForm() {
@@ -48,7 +77,14 @@ function initContactForm() {
   if (!form) return;
 
   const status = form.querySelector("[data-form-status]");
+  const directEmailLink = document.querySelector("[data-direct-email-link]");
   let createdAt = Date.now();
+
+  form.addEventListener("input", () => {
+    if (Date.now() - createdAt > MIN_HUMAN_TIME_MS) {
+      setFormStatus(status, "", "info");
+    }
+  });
 
   form.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -66,7 +102,11 @@ function initContactForm() {
     }
 
     if (Date.now() - createdAt < MIN_HUMAN_TIME_MS) {
-      setFormStatus(status, "Please wait a second before submitting.", "error");
+      setFormStatus(
+        status,
+        "Please wait 2.5 seconds before submitting again.",
+        "error"
+      );
       return;
     }
 
@@ -87,22 +127,36 @@ function initContactForm() {
       message: form.elements.message.value.trim(),
     };
 
+    if (directEmailLink) {
+      setDirectEmailLink(directEmailLink, fields);
+    }
+
     try {
-      // Navigate to Gmail compose (or the user's webmail compose). If the user
-      // isn't signed in to Gmail this will redirect them to Gmail's sign-in page.
-      window.location.href = buildMailtoUrl(fields);
+      const gmailUrl = buildGmailUrl(fields);
+      const directMailtoUrl = buildMailtoUrl(fields);
+      const popup = window.open(gmailUrl, "_blank", "noopener,noreferrer");
+
+      if (popup) {
+        popup.opener = null;
+        setFormStatus(
+          status,
+          "A Gmail draft is ready. Review it and click Send. If Gmail did not open, use the direct email option below.",
+          "success"
+        );
+        return;
+      }
+
+      window.location.href = directMailtoUrl;
       setFormStatus(
         status,
-        "A Gmail compose window should open. If it doesn't, use the direct mail link above.",
+        "A direct email draft is opening. Review it and click Send.",
         "success"
       );
-      form.reset();
-      createdAt = Date.now();
     } catch (error) {
       console.error("Failed to open email client", error);
       setFormStatus(
         status,
-        "Could not open your email app. Please use the direct mail link above.",
+        "Could not open a draft automatically. Please use the direct email link above.",
         "error"
       );
     }
