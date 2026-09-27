@@ -22,8 +22,6 @@ function buildMailtoUrl(fields) {
     : "New project enquiry";
 
   const body = [
-    `Name: ${fields.name}`,
-    `Email: ${fields.email}`,
     fields.project ? `Project type: ${fields.project}` : null,
     "",
     "Project details:",
