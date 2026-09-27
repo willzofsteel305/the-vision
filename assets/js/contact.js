@@ -39,13 +39,14 @@ function buildGmailComposeUrl({ subject, body }) {
   // Privacy note: this static-site workflow embeds subject/body in URL query
   // parameters, so project details may appear in browser history or URL logs.
   // A backend is required to avoid this exposure.
-  const gmailBase = "https://mail.google.com/mail/?view=cm&fs=1";
-  const params = new URLSearchParams({
-    to: CONTACT_EMAIL,
-    su: subject,
-    body,
-  });
-  return `${gmailBase}&${params.toString()}`;
+  const gmailUrl = new URL("https://mail.google.com/mail/u/0/");
+  gmailUrl.searchParams.set("view", "cm");
+  gmailUrl.searchParams.set("fs", "1");
+  gmailUrl.searchParams.set("tf", "1");
+  gmailUrl.searchParams.set("to", CONTACT_EMAIL);
+  gmailUrl.searchParams.set("su", subject);
+  gmailUrl.searchParams.set("body", body);
+  return gmailUrl.toString();
 }
 
 function buildMailtoUrl({ subject, body }) {
